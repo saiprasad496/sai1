@@ -1,0 +1,24 @@
+{
+	"name": "Append Variable",
+	"properties": {
+		"activities": [
+			{
+				"name": "Append variable1",
+				"type": "AppendVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Var",
+					"value": "0"
+				}
+			}
+		],
+		"variables": {
+			"Var": {
+				"type": "Array"
+			}
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

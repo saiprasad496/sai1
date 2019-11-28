@@ -1,0 +1,60 @@
+{
+	"name": "movies_sql_write",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "movie_title",
+				"type": "varchar"
+			},
+			{
+				"name": "actor_name",
+				"type": "varchar"
+			},
+			{
+				"name": "director_name",
+				"type": "varchar"
+			},
+			{
+				"name": "gross",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "duration",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "num_critic_for_reviews",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "num_voted_users",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "release_year",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "rating",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "movie"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

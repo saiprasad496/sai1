@@ -1,0 +1,51 @@
+{
+	"name": "pipeline2",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute SSIS package1",
+				"type": "ExecuteSSISPackage",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"packageLocation": {
+						"packagePath": "C:\\Users\\prasad.sa\\Desktop\\azure\\ssis.ispac",
+						"type": "File",
+						"typeProperties": {
+							"accessCredential": {
+								"domain": "HCLTECH",
+								"userName": "sai",
+								"password": {
+									"type": "SecureString",
+									"value": "**********"
+								}
+							}
+						}
+					},
+					"runtime": "x86",
+					"connectVia": {
+						"referenceName": "integrationRuntime2",
+						"type": "IntegrationRuntimeReference"
+					},
+					"executionCredential": {
+						"domain": "HCLTECH",
+						"userName": "sai",
+						"password": {
+							"type": "SecureString",
+							"value": "**********"
+						}
+					}
+				}
+			}
+		],
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

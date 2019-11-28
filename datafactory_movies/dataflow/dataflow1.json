@@ -1,0 +1,39 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "datalakeempread",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Azure_sql_write",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "loadeddate"
+				},
+				{
+					"name": "Filter1"
+				}
+			],
+			"script": "\n\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionBy('hash', 1)) ~> source1\nsource1 derive(empno = toInteger(byName('empno')),\n\t\tename = toString(byName('ename'))) ~> MapDrifted1\nMapDrifted1 derive(loadeddate = currentDate()) ~> loadeddate\nloadeddate filter(toInteger(empno)==10) ~> Filter1\nFilter1 sink(input(\n\t\tmovie_title as string,\n\t\tactor_name as string,\n\t\tdirector_name as string,\n\t\tgross as integer,\n\t\tduration as integer,\n\t\tnum_critic_for_reviews as integer,\n\t\tnum_voted_users as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table') ~> sink1"
+		}
+	}
+}

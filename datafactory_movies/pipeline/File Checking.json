@@ -1,0 +1,274 @@
+{
+	"name": "File Checking",
+	"properties": {
+		"activities": [
+			{
+				"name": "File Check",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('Get Metadata1').output.exists",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Lookup1",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "Get Metadata1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderStoredProcedureName": "[dbo].[prc_seq]"
+								},
+								"dataset": {
+									"referenceName": "Azure_sql_write",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "Get Metadata1",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "EmpDeleteAndReplace",
+									"type": "DatasetReference"
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							}
+						},
+						{
+							"name": "Set variable1",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Lookup1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "var",
+								"value": {
+									"value": "@string(activity('Lookup1').output.value[0].id)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "If Condition1",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Set variable1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(int(variables('var')),1)",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Wait2",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 1
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Wait1",
+										"type": "Wait",
+										"dependsOn": [
+											{
+												"activity": "mail send",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 1
+										}
+									},
+									{
+										"name": "Web configuration",
+										"type": "WebActivity",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"url": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json",
+											"method": "GET"
+										}
+									},
+									{
+										"name": "mail send",
+										"type": "WebActivity",
+										"dependsOn": [
+											{
+												"activity": "Web configuration",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"url": "https://prod-25.southindia.logic.azure.com:443/workflows/9a493aa6940d4d1992960a31134a4af1/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TblZ8hkmkaVfZIGmirr8_2Rg_rKfOc8nqYU4w-FEQF4",
+											"method": "POST",
+											"body": {
+												"DataFactoryName": "@{pipeline().DataFactory}",
+												"PipelineName": "@{pipeline().Pipeline}",
+												"Subject": "An error has occurred!",
+												"ErrorMessage": "The ADF pipeline has crashed! Please check the logs.",
+												"EmailTo": "prasad.sai@thomascook.com"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "If Condition2",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "If Condition1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(int(variables('var')),4)",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "Web1",
+										"type": "WebActivity",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"url": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json",
+											"method": "GET"
+										}
+									},
+									{
+										"name": "Web2",
+										"type": "WebActivity",
+										"dependsOn": [
+											{
+												"activity": "Web1",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"url": "https://prod-25.southindia.logic.azure.com:443/workflows/9a493aa6940d4d1992960a31134a4af1/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=TblZ8hkmkaVfZIGmirr8_2Rg_rKfOc8nqYU4w-FEQF4",
+											"method": "POST",
+											"body": {
+												"DataFactoryName": "@{pipeline().DataFactory}",
+												"PipelineName": "@{pipeline().Pipeline}",
+												"Subject": "input file not available and killed job !",
+												"ErrorMessage": "Kindly check with respective team.",
+												"EmailTo": "prasad.sai@thomascook.com"
+											}
+										}
+									}
+								]
+							}
+						}
+					],
+					"timeout": "0.00:04:00"
+				}
+			}
+		],
+		"variables": {
+			"var": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,78 @@
+{
+	"name": "Local to Azure SQL",
+	"properties": {
+		"activities": [
+			{
+				"name": "OnPremisestoAzure",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource"
+					},
+					"sink": {
+						"type": "AzureSqlSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "EMPNO",
+									"type": "Int32"
+								},
+								"sink": {
+									"name": "empno",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"name": "ENAME",
+									"type": "String"
+								},
+								"sink": {
+									"name": "empname",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "LAODED_DATE",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "loaded_Date",
+									"type": "DateTime"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Local_SQL_Server",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Azure_sql_write",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,52 @@
+{
+	"name": "Emp_data_read_with_suggo",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "datalakeempread",
+						"type": "DatasetReference"
+					},
+					"name": "EMPReadFromDatalake"
+				},
+				{
+					"dataset": {
+						"referenceName": "Azure_sql_write",
+						"type": "DatasetReference"
+					},
+					"name": "MaxEmpID"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Azure_sql_write",
+						"type": "DatasetReference"
+					},
+					"name": "MovingDataAzureSQL"
+				}
+			],
+			"transformations": [
+				{
+					"name": "JoinEmpWithMaxEmpId"
+				},
+				{
+					"name": "SurrogateKey1"
+				},
+				{
+					"name": "UpdateSurogateKey"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "SelectRequiredColumns"
+				}
+			],
+			"script": "\n\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> EMPReadFromDatalake\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'select isnull(max(empno),0) as maxempno from emp',\n\tformat: 'query') ~> MaxEmpID\nEMPReadFromDatalake, MaxEmpID join(1==1,\n\tjoinType:'cross',\n\tbroadcast: 'none')~> JoinEmpWithMaxEmpId\nMapDrifted1 keyGenerate(output(empno as long),\n\tstartAt: 1L) ~> SurrogateKey1\nSurrogateKey1 derive(empno = empno+maxempno) ~> UpdateSurogateKey\nJoinEmpWithMaxEmpId derive(ename = toString(byName('ename')),\n\t\tmaxempno = toInteger(byName('maxempno'))) ~> MapDrifted1\nUpdateSurogateKey select(mapColumn(\n\t\tename,\n\t\tempno\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectRequiredColumns\nSelectRequiredColumns sink(input(\n\t\tmovie_title as string,\n\t\tactor_name as string,\n\t\tdirector_name as string,\n\t\tgross as integer,\n\t\tduration as integer,\n\t\tnum_critic_for_reviews as integer,\n\t\tnum_voted_users as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table') ~> MovingDataAzureSQL"
+		}
+	}
+}

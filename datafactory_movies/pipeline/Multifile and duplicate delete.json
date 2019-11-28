@@ -1,0 +1,28 @@
+{
+	"name": "Multifile and duplicate delete",
+	"properties": {
+		"activities": [
+			{
+				"name": "Multiple File with wildcard",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Multiple File with wildcard",
+						"type": "DataFlowReference"
+					}
+				}
+			}
+		],
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

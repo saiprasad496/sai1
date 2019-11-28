@@ -1,0 +1,42 @@
+{
+	"name": "movies_read",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "datalake_movie_read",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "movies_sql_write",
+						"type": "DatasetReference"
+					},
+					"name": "MovingSqlAzure"
+				}
+			],
+			"transformations": [
+				{
+					"name": "selectingfewcolumns",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "Filter1"
+				},
+				{
+					"name": "Sortbygross"
+				},
+				{
+					"name": "DerivedColumn1"
+				}
+			],
+			"script": "\n\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> source1\nsource1 derive(director_name = toString(byName('director_name')),\n\t\tactor_1_name = toString(byName('actor_1_name')),\n\t\tmovie_title = toString(byName('movie_title')),\n\t\tnum_user_for_reviews = toString(byName('num_user_for_reviews')),\n\t\timdb_score = toString(byName('imdb_score')),\n\t\tgross = toString(byName('gross')),\n\t\ttitle_year = toString(byName('title_year')),\n\t\tduration = toString(byName('duration')),\n\t\tnum_voted_users = toString(byName('num_voted_users'))) ~> selectingfewcolumns\nselectingfewcolumns filter(and(toInteger(gross)>=1000 , toInteger(title_year)==1998)) ~> Filter1\nDerivedColumn1 sort(asc(gross, true)) ~> Sortbygross\nFilter1 derive(imdb_score = iif(length({imdb_score})>0,imdb_score\r\n,toString(0))) ~> DerivedColumn1\nSortbygross sink(input(\n\t\tmovie_title as string,\n\t\tactor_name as string,\n\t\tdirector_name as string,\n\t\tgross as integer,\n\t\tduration as integer,\n\t\tnum_critic_for_reviews as integer,\n\t\tnum_voted_users as integer,\n\t\trelease_year as integer,\n\t\trating as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tpostSQLs:['insert into movie_bkp\\nselect * from movie'],\n\tmapColumn(\n\t\tmovie_title,\n\t\tdirector_name\n\t)) ~> MovingSqlAzure"
+		}
+	}
+}

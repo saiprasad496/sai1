@@ -1,0 +1,53 @@
+{
+	"name": "DataFLow Lookup",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "datalakeempread",
+						"type": "DatasetReference"
+					},
+					"name": "EMPDataReadDL"
+				},
+				{
+					"dataset": {
+						"referenceName": "DeptDataRead",
+						"type": "DatasetReference"
+					},
+					"name": "DeptDataReadDL"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Azure_sql_write",
+						"type": "DatasetReference"
+					},
+					"name": "SinkDBEMPWrite"
+				}
+			],
+			"transformations": [
+				{
+					"name": "LookupEmpAndDept"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "MapDrifted2",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "Select1"
+				},
+				{
+					"name": "DerivedColumn1"
+				}
+			],
+			"script": "\n\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> EMPDataReadDL\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> DeptDataReadDL\nMapDrifted1, MapDrifted2 lookup(empno == deptno,\n\tbroadcast: 'none')~> LookupEmpAndDept\nEMPDataReadDL derive(empno = toString(byName('empno')),\n\t\tename = toString(byName('ename'))) ~> MapDrifted1\nDeptDataReadDL derive(deptno = toString(byName('deptno')),\n\t\tdname = toString(byName('dname'))) ~> MapDrifted2\nLookupEmpAndDept select(mapColumn(\n\t\tempno,\n\t\tename\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(LoadedDate = currentUTC()) ~> DerivedColumn1\nDerivedColumn1 sink(input(\n\t\tmovie_title as string,\n\t\tactor_name as string,\n\t\tdirector_name as string,\n\t\tgross as integer,\n\t\tduration as integer,\n\t\tnum_critic_for_reviews as integer,\n\t\tnum_voted_users as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table') ~> SinkDBEMPWrite"
+		}
+	}
+}

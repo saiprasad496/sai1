@@ -1,0 +1,36 @@
+{
+	"name": "AlterRow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "datalakeempread",
+						"type": "DatasetReference"
+					},
+					"name": "EmpTableRead"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Azure_sql_write",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ModifyingExistingRow"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				}
+			],
+			"script": "\n\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> EmpTableRead\nMapDrifted1 alterRow(deleteIf(empno>2)) ~> ModifyingExistingRow\nEmpTableRead derive(empno = toInteger(byName('empno')),\n\t\tename = toString(byName('ename'))) ~> MapDrifted1\nModifyingExistingRow sink(input(\n\t\tmovie_title as string,\n\t\tactor_name as string,\n\t\tdirector_name as string,\n\t\tgross as integer,\n\t\tduration as integer,\n\t\tnum_critic_for_reviews as integer,\n\t\tnum_voted_users as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tkeys:['empno'],\n\tformat: 'table') ~> sink1"
+		}
+	}
+}

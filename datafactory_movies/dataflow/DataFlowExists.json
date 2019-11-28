@@ -1,0 +1,47 @@
+{
+	"name": "DataFlowExists",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "datalakeempread",
+						"type": "DatasetReference"
+					},
+					"name": "EmpRead"
+				},
+				{
+					"dataset": {
+						"referenceName": "DeptDataRead",
+						"type": "DatasetReference"
+					},
+					"name": "DeptRead"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Azure_sql_write",
+						"type": "DatasetReference"
+					},
+					"name": "SinkEmpRead"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ExistsEmpDept"
+				},
+				{
+					"name": "MapDrifted1",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "MapDrifted2",
+					"description": "Creates an explicit mapping for each drifted column"
+				}
+			],
+			"script": "\n\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionBy('hash', 1)) ~> EmpRead\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> DeptRead\nMapDrifted1, MapDrifted2 exists(empno == deptno,\n\tnegate:false,\n\tbroadcast: 'none')~> ExistsEmpDept\nEmpRead derive(empno = toString(byName('empno')),\n\t\tename = toString(byName('ename'))) ~> MapDrifted1\nDeptRead derive(deptno = toString(byName('deptno')),\n\t\tdname = toString(byName('dname'))) ~> MapDrifted2\nExistsEmpDept sink(input(\n\t\tmovie_title as string,\n\t\tactor_name as string,\n\t\tdirector_name as string,\n\t\tgross as integer,\n\t\tduration as integer,\n\t\tnum_critic_for_reviews as integer,\n\t\tnum_voted_users as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table') ~> SinkEmpRead"
+		}
+	}
+}
